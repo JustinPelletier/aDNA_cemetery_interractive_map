@@ -1,5 +1,5 @@
-const imageWidth = 210;
-const imageHeight = 297;
+const imageWidth = 88.98305084745762;
+const imageHeight = 89.1;
 
 const map = L.map("map", {
   crs: L.CRS.Simple,
