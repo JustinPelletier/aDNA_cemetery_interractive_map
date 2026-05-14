@@ -1,5 +1,5 @@
-const imageWidth = 2000;
-const imageHeight = 2500;
+const imageWidth = 210;
+const imageHeight = 297;
 
 const map = L.map("map", {
   crs: L.CRS.Simple,
@@ -27,11 +27,9 @@ function parseTSV(text) {
 
 function haplogroupColor(haplo) {
   const colors = {
-    H: "#1f77b4",
-    J: "#ff7f0e",
-    T: "#2ca02c",
-    U: "#d62728",
-    K: "#9467bd"
+    K2a5a1: "#1f77b4",
+    H7b: "#ff7f0e",
+    T2a1a: "#2ca02c"
   };
 
   return colors[haplo] || "#555555";
@@ -47,7 +45,7 @@ fetch("data/samples_test.tsv")
       const y = Number(sample.Y);
 
       const marker = L.circleMarker([y, x], {
-        radius: 7,
+        radius: 2,
         color: haplogroupColor(sample.MT_haplogroup),
         fillColor: haplogroupColor(sample.MT_haplogroup),
         fillOpacity: 0.8,
