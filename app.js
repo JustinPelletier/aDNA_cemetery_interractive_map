@@ -8,6 +8,6 @@ const map = L.map("map", {
 
 const bounds = [[0, 0], [imageHeight, imageWidth]];
 
-L.imageOverlay("assets/cemetery_plan.png", bounds).addTo(map);
+L.imageOverlay("assets/Notre_Dame_Cemetery_PLAN.png", bounds).addTo(map);
 
 map.fitBounds(bounds);
