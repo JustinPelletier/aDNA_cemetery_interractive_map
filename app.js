@@ -49,7 +49,7 @@ fetch("data/samples_test.tsv")
         color: haplogroupColor(sample.MT_haplogroup),
         fillColor: haplogroupColor(sample.MT_haplogroup),
         fillOpacity: 0.8,
-        weight: 2
+        weight: 6
       }).addTo(map);
 
       marker.bindPopup(`
