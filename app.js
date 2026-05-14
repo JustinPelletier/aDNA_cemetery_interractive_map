@@ -125,8 +125,7 @@ fetch("data/samples_test.tsv")
         MT haplogroup: ${sample.MT_haplogroup}<br>
         Sex: ${sample.Sex}<br>
         Mean coverage: ${sample.Mean_coverage}<br>
-        Kinship group: ${sample.Kinship_group}<br>
-        <strong>Stipulated name:</strong> ${sample.Stipulated_name}<br><br>
+        Kinship group: ${sample.Kinship_group}<br><br>
         ${sample.History}
       `);
 
