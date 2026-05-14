@@ -1,4 +1,4 @@
 Sample_ID	X	Y	MT_haplogroup	Sex	Mean_coverage	Kinship_group	Stipulated_name	History
 ID01	1000	1000	K2a5a1	0	94	Group1	"Jane Doe"	"Hello World"
 ID02	1000	1050	H7b	1	291.06	Group1	"John Doe"	"Hello Mars"
-ID03	25	300	T2a1a	1	128.43	"Jeanne pâte"	"Salut Monde"
+ID03	25	300	T2a1a	1	128.43  NA	"Jeanne pâte"	"Salut Monde"
