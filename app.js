@@ -45,7 +45,7 @@ fetch("data/samples_test.tsv")
       const y = Number(sample.Y);
 
       const marker = L.circleMarker([y, x], {
-        radius: 2,
+        radius: 6,
         color: haplogroupColor(sample.MT_haplogroup),
         fillColor: haplogroupColor(sample.MT_haplogroup),
         fillOpacity: 0.8,
