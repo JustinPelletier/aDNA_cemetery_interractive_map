@@ -35,6 +35,8 @@ function haplogroupColor(haplo) {
   return colors[haplo] || "#555555";
 }
 
+const markers = [];
+
 fetch("data/samples_test.tsv")
   .then(response => response.text())
   .then(text => {
@@ -45,7 +47,7 @@ fetch("data/samples_test.tsv")
       const y = Number(sample.Y);
 
       const marker = L.circleMarker([y, x], {
-        radius: 6,
+        radius: 12,
         color: haplogroupColor(sample.MT_haplogroup),
         fillColor: haplogroupColor(sample.MT_haplogroup),
         fillOpacity: 0.8,
@@ -56,9 +58,64 @@ fetch("data/samples_test.tsv")
         <strong>${sample.Sample_ID}</strong><br>
         MT haplogroup: ${sample.MT_haplogroup}<br>
         Sex: ${sample.Sex}<br>
+        Mean coverage: ${sample.Mean_coverage}<br>
         Kinship group: ${sample.Kinship_group}<br>
         <strong>Stipulated name:</strong> ${sample.Stipulated_name}<br><br>
         ${sample.History}
       `);
+
+      markers.push({ sample, marker });
+    });
+
+    setupSearch();
+  });
+
+function setupSearch() {
+  const input = document.getElementById("searchInput");
+  const clearButton = document.getElementById("clearSearch");
+
+  input.addEventListener("input", () => {
+    const query = input.value.toLowerCase().trim();
+
+    markers.forEach(({ sample, marker }) => {
+      const match =
+        sample.Sample_ID.toLowerCase().includes(query) ||
+        sample.Stipulated_name.toLowerCase().includes(query);
+
+      marker.setStyle({
+        fillOpacity: query === "" || match ? 0.9 : 0.15,
+        opacity: query === "" || match ? 1 : 0.25
+      });
+
+      if (match && query !== "") {
+        marker.bringToFront();
+      }
     });
   });
+
+  input.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+      const query = input.value.toLowerCase().trim();
+
+      const found = markers.find(({ sample }) =>
+        sample.Sample_ID.toLowerCase().includes(query) ||
+        sample.Stipulated_name.toLowerCase().includes(query)
+      );
+
+      if (found) {
+        map.setView(found.marker.getLatLng(), 2);
+        found.marker.openPopup();
+      }
+    }
+  });
+
+  clearButton.addEventListener("click", () => {
+    input.value = "";
+    markers.forEach(({ marker }) => {
+      marker.setStyle({
+        fillOpacity: 0.8,
+        opacity: 1
+      });
+    });
+  });
+}
