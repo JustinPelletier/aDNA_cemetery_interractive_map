@@ -11,29 +11,9 @@ const bounds = [[0, 0], [imageHeight, imageWidth]];
 L.imageOverlay("assets/Notre_Dame_Cemetery_PLAN-cropped.svg", bounds).addTo(map);
 map.fitBounds(bounds);
 
-
-const coffinSVG = `
-<svg xmlns="http://www.w3.org/2000/svg"
-     width="24"
-     height="40"
-     viewBox="0 0 24 40">
-  <polygon points="6,0 18,0 24,10 20,40 4,40 0,10"
-           fill="${initialColor}"
-           stroke="black"
-           stroke-width="2"/>
-</svg>
-`;
-
-const marker = L.marker([y, x], {
-  icon: L.divIcon({
-    className: "",
-    html: coffinSVG,
-    iconSize: [24, 40],
-    iconAnchor: [12, 20]
-  })
-}).addTo(map);
-
-
+// ======================================================
+// Data parser
+// ======================================================
 
 function parseTSV(text) {
   const lines = text.trim().split("\n");
@@ -49,6 +29,10 @@ function parseTSV(text) {
   });
 }
 
+// ======================================================
+// Color palettes
+// ======================================================
+
 function haplogroupColor(haplo) {
   const colors = {
     K2a5a1: "#1f77b4",
@@ -58,8 +42,6 @@ function haplogroupColor(haplo) {
 
   return colors[haplo] || "#555555";
 }
-
-
 
 function sexColor(sex) {
   const colors = {
@@ -84,6 +66,52 @@ function kinshipColor(group) {
   return colors[group] || "#555555";
 }
 
+function getColor(sample, mode) {
+  if (mode === "MT_haplogroup") {
+    return haplogroupColor(sample.MT_haplogroup);
+  }
+
+  if (mode === "Sex") {
+    return sexColor(sample.Sex);
+  }
+
+  if (mode === "Kinship_group") {
+    return kinshipColor(sample.Kinship_group);
+  }
+
+  return "#555555";
+}
+
+// ======================================================
+// Coffin marker icon
+// ======================================================
+
+function createCoffinIcon(color, opacity = 0.9) {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+         width="28"
+         height="42"
+         viewBox="0 0 28 42">
+      <polygon points="8,1 20,1 27,11 23,41 5,41 1,11"
+               fill="${color}"
+               fill-opacity="${opacity}"
+               stroke="black"
+               stroke-width="2"/>
+    </svg>
+  `;
+
+  return L.divIcon({
+    className: "coffin-marker",
+    html: svg,
+    iconSize: [28, 42],
+    iconAnchor: [14, 21],
+    popupAnchor: [0, -20]
+  });
+}
+
+// ======================================================
+// Load samples and create markers
+// ======================================================
 
 const markers = [];
 
@@ -98,12 +126,8 @@ fetch("data/samples_test.tsv")
 
       const initialColor = getColor(sample, "MT_haplogroup");
 
-      const marker = L.circleMarker([y, x], {
-        radius: 12,
-        color: initialColor,
-        fillColor: initialColor,
-        fillOpacity: 0.8,
-        weight: 6
+      const marker = L.marker([y, x], {
+        icon: createCoffinIcon(initialColor, 0.9)
       }).addTo(map);
 
       marker.bindPopup(`
@@ -123,22 +147,28 @@ fetch("data/samples_test.tsv")
     setupColorMode();
   });
 
+// ======================================================
+// Search
+// ======================================================
+
 function setupSearch() {
   const input = document.getElementById("searchInput");
   const clearButton = document.getElementById("clearSearch");
+  const colorModeSelect = document.getElementById("colorMode");
 
   input.addEventListener("input", () => {
     const query = input.value.toLowerCase().trim();
+    const mode = colorModeSelect.value;
 
     markers.forEach(({ sample, marker }) => {
       const match =
         sample.Sample_ID.toLowerCase().includes(query) ||
         sample.Stipulated_name.toLowerCase().includes(query);
 
-      marker.setStyle({
-        fillOpacity: query === "" || match ? 0.9 : 0.15,
-        opacity: query === "" || match ? 1 : 0.25
-      });
+      const color = getColor(sample, mode);
+      const opacity = query === "" || match ? 0.9 : 0.15;
+
+      marker.setIcon(createCoffinIcon(color, opacity));
 
       if (match && query !== "") {
         marker.bringToFront();
@@ -164,32 +194,18 @@ function setupSearch() {
 
   clearButton.addEventListener("click", () => {
     input.value = "";
-    markers.forEach(({ marker }) => {
-      marker.setStyle({
-        fillOpacity: 0.9,
-        opacity: 1
-      });
+    const mode = colorModeSelect.value;
+
+    markers.forEach(({ sample, marker }) => {
+      const color = getColor(sample, mode);
+      marker.setIcon(createCoffinIcon(color, 0.9));
     });
   });
 }
 
-
-
-function getColor(sample, mode) {
-  if (mode === "MT_haplogroup") {
-    return haplogroupColor(sample.MT_haplogroup);
-  }
-
-  if (mode === "Sex") {
-    return sexColor(sample.Sex);
-  }
-
-  if (mode === "Kinship_group") {
-    return kinshipColor(sample.Kinship_group);
-  }
-
-  return "#555555";
-}
+// ======================================================
+// Color mode
+// ======================================================
 
 function setupColorMode() {
   const colorModeSelect = document.getElementById("colorMode");
@@ -199,11 +215,7 @@ function setupColorMode() {
 
     markers.forEach(({ sample, marker }) => {
       const color = getColor(sample, mode);
-
-      marker.setStyle({
-        color: color,
-        fillColor: color
-      });
+      marker.setIcon(createCoffinIcon(color, 0.9));
     });
   });
 }
