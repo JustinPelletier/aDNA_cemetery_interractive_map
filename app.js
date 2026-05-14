@@ -98,7 +98,7 @@ function createCoffinPolygon(sample, color, opacity = 0.85) {
 
   return L.polygon(coffinCoordinates(x, y), {
     color: "black",
-    weight: 0.35,
+    weight: 0.80,
     fillColor: color,
     fillOpacity: opacity,
     opacity: opacity
