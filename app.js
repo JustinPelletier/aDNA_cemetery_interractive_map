@@ -8,7 +8,7 @@ const map = L.map("map", {
 
 const bounds = [[0, 0], [imageHeight, imageWidth]];
 
-L.imageOverlay("assets/Notre_Dame_Cemetery_PLAN.svg", bounds).addTo(map);
+L.imageOverlay("assets/Notre_Dame_Cemetery_PLAN-cropped.svg", bounds).addTo(map);
 map.fitBounds(bounds);
 
 function parseTSV(text) {
