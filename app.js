@@ -9,5 +9,58 @@ const map = L.map("map", {
 const bounds = [[0, 0], [imageHeight, imageWidth]];
 
 L.imageOverlay("assets/Notre_Dame_Cemetery_PLAN.svg", bounds).addTo(map);
-
 map.fitBounds(bounds);
+
+function parseTSV(text) {
+  const lines = text.trim().split("\n");
+  const headers = lines[0].split("\t");
+
+  return lines.slice(1).map(line => {
+    const values = line.split("\t");
+    const row = {};
+    headers.forEach((h, i) => {
+      row[h.trim()] = values[i]?.trim() || "";
+    });
+    return row;
+  });
+}
+
+function haplogroupColor(haplo) {
+  const colors = {
+    H: "#1f77b4",
+    J: "#ff7f0e",
+    T: "#2ca02c",
+    U: "#d62728",
+    K: "#9467bd"
+  };
+
+  return colors[haplo] || "#555555";
+}
+
+fetch("data/samples_test.tsv")
+  .then(response => response.text())
+  .then(text => {
+    const samples = parseTSV(text);
+
+    samples.forEach(sample => {
+      const x = Number(sample.X);
+      const y = Number(sample.Y);
+
+      const marker = L.circleMarker([y, x], {
+        radius: 7,
+        color: haplogroupColor(sample.MT_haplogroup),
+        fillColor: haplogroupColor(sample.MT_haplogroup),
+        fillOpacity: 0.8,
+        weight: 2
+      }).addTo(map);
+
+      marker.bindPopup(`
+        <strong>${sample.Sample_ID}</strong><br>
+        MT haplogroup: ${sample.MT_haplogroup}<br>
+        Sex: ${sample.Sex}<br>
+        Kinship group: ${sample.Kinship_group}<br>
+        <strong>Stipulated name:</strong> ${sample.Stipulated_name}<br><br>
+        ${sample.History}
+      `);
+    });
+  });
