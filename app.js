@@ -47,11 +47,11 @@ fetch("data/samples_test.tsv")
       const y = Number(sample.Y);
 
       const marker = L.circleMarker([y, x], {
-        radius: 12,
-        color: haplogroupColor(sample.MT_haplogroup),
+        radius: 10,
+        color: "black",
         fillColor: haplogroupColor(sample.MT_haplogroup),
-        fillOpacity: 0.8,
-        weight: 6
+        fillOpacity: 0.9,
+        weight: 2
       }).addTo(map);
 
       marker.bindPopup(`
