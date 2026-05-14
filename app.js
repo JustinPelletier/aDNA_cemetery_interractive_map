@@ -30,7 +30,7 @@ function parseTSV(text) {
 }
 
 // ======================================================
-// Color palettes
+// Colors
 // ======================================================
 
 function haplogroupColor(haplo) {
@@ -67,50 +67,46 @@ function kinshipColor(group) {
 }
 
 function getColor(sample, mode) {
-  if (mode === "MT_haplogroup") {
-    return haplogroupColor(sample.MT_haplogroup);
-  }
-
-  if (mode === "Sex") {
-    return sexColor(sample.Sex);
-  }
-
-  if (mode === "Kinship_group") {
-    return kinshipColor(sample.Kinship_group);
-  }
+  if (mode === "MT_haplogroup") return haplogroupColor(sample.MT_haplogroup);
+  if (mode === "Sex") return sexColor(sample.Sex);
+  if (mode === "Kinship_group") return kinshipColor(sample.Kinship_group);
 
   return "#555555";
 }
 
 // ======================================================
-// Coffin marker icon
+// Coffin polygon marker
 // ======================================================
 
-function createCoffinIcon(color, opacity = 0.9) {
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg"
-         width="28"
-         height="42"
-         viewBox="0 0 28 42">
-      <polygon points="8,1 20,1 27,11 23,41 5,41 1,11"
-               fill="${color}"
-               fill-opacity="${opacity}"
-               stroke="black"
-               stroke-width="2"/>
-    </svg>
-  `;
+function coffinCoordinates(x, y, width = 2.2, height = 3.6) {
+  const w = width / 2;
+  const h = height / 2;
 
-  return L.divIcon({
-    className: "coffin-marker",
-    html: svg,
-    iconSize: [28, 42],
-    iconAnchor: [14, 21],
-    popupAnchor: [0, -20]
+  return [
+    [y - h, x - w * 0.45],
+    [y - h, x + w * 0.45],
+    [y - h * 0.45, x + w],
+    [y + h, x + w * 0.75],
+    [y + h, x - w * 0.75],
+    [y - h * 0.45, x - w]
+  ];
+}
+
+function createCoffinPolygon(sample, color, opacity = 0.85) {
+  const x = Number(sample.X);
+  const y = Number(sample.Y);
+
+  return L.polygon(coffinCoordinates(x, y), {
+    color: "black",
+    weight: 0.35,
+    fillColor: color,
+    fillOpacity: opacity,
+    opacity: opacity
   });
 }
 
 // ======================================================
-// Load samples and create markers
+// Load samples
 // ======================================================
 
 const markers = [];
@@ -121,14 +117,8 @@ fetch("data/samples_test.tsv")
     const samples = parseTSV(text);
 
     samples.forEach(sample => {
-      const x = Number(sample.X);
-      const y = Number(sample.Y);
-
-      const initialColor = getColor(sample, "MT_haplogroup");
-
-      const marker = L.marker([y, x], {
-        icon: createCoffinIcon(initialColor, 0.9)
-      }).addTo(map);
+      const color = getColor(sample, "MT_haplogroup");
+      const marker = createCoffinPolygon(sample, color, 0.85).addTo(map);
 
       marker.bindPopup(`
         <strong>${sample.Sample_ID}</strong><br>
@@ -166,9 +156,12 @@ function setupSearch() {
         sample.Stipulated_name.toLowerCase().includes(query);
 
       const color = getColor(sample, mode);
-      const opacity = query === "" || match ? 0.9 : 0.15;
 
-      marker.setIcon(createCoffinIcon(color, opacity));
+      marker.setStyle({
+        fillColor: color,
+        fillOpacity: query === "" || match ? 0.85 : 0.12,
+        opacity: query === "" || match ? 1 : 0.25
+      });
 
       if (match && query !== "") {
         marker.bringToFront();
@@ -186,7 +179,7 @@ function setupSearch() {
       );
 
       if (found) {
-        map.setView(found.marker.getLatLng(), 2);
+        map.setView(found.marker.getBounds().getCenter(), 2);
         found.marker.openPopup();
       }
     }
@@ -198,7 +191,12 @@ function setupSearch() {
 
     markers.forEach(({ sample, marker }) => {
       const color = getColor(sample, mode);
-      marker.setIcon(createCoffinIcon(color, 0.9));
+
+      marker.setStyle({
+        fillColor: color,
+        fillOpacity: 0.85,
+        opacity: 1
+      });
     });
   });
 }
@@ -215,7 +213,10 @@ function setupColorMode() {
 
     markers.forEach(({ sample, marker }) => {
       const color = getColor(sample, mode);
-      marker.setIcon(createCoffinIcon(color, 0.9));
+
+      marker.setStyle({
+        fillColor: color
+      });
     });
   });
 }
