@@ -11,6 +11,30 @@ const bounds = [[0, 0], [imageHeight, imageWidth]];
 L.imageOverlay("assets/Notre_Dame_Cemetery_PLAN-cropped.svg", bounds).addTo(map);
 map.fitBounds(bounds);
 
+
+const coffinSVG = `
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="24"
+     height="40"
+     viewBox="0 0 24 40">
+  <polygon points="6,0 18,0 24,10 20,40 4,40 0,10"
+           fill="${initialColor}"
+           stroke="black"
+           stroke-width="2"/>
+</svg>
+`;
+
+const marker = L.marker([y, x], {
+  icon: L.divIcon({
+    className: "",
+    html: coffinSVG,
+    iconSize: [24, 40],
+    iconAnchor: [12, 20]
+  })
+}).addTo(map);
+
+
+
 function parseTSV(text) {
   const lines = text.trim().split("\n");
   const headers = lines[0].split("\t");
