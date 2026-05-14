@@ -35,6 +35,32 @@ function haplogroupColor(haplo) {
   return colors[haplo] || "#555555";
 }
 
+
+
+function sexColor(sex) {
+  const colors = {
+    "0": "#6baed6",
+    "1": "#fb6a4a",
+    "NA": "#999999",
+    "": "#999999"
+  };
+
+  return colors[sex] || "#999999";
+}
+
+function kinshipColor(group) {
+  const colors = {
+    Group1: "#756bb1",
+    Group2: "#31a354",
+    Group3: "#e6550d",
+    NA: "#999999",
+    "": "#999999"
+  };
+
+  return colors[group] || "#555555";
+}
+
+
 const markers = [];
 
 fetch("data/samples_test.tsv")
@@ -46,12 +72,14 @@ fetch("data/samples_test.tsv")
       const x = Number(sample.X);
       const y = Number(sample.Y);
 
+      const initialColor = getColor(sample, "MT_haplogroup");
+
       const marker = L.circleMarker([y, x], {
-        radius: 10,
-        color: "black",
-        fillColor: haplogroupColor(sample.MT_haplogroup),
-        fillOpacity: 0.9,
-        weight: 2
+        radius: 12,
+        color: initialColor,
+        fillColor: initialColor,
+        fillOpacity: 0.8,
+        weight: 6
       }).addTo(map);
 
       marker.bindPopup(`
@@ -68,6 +96,7 @@ fetch("data/samples_test.tsv")
     });
 
     setupSearch();
+    setupColorMode();
   });
 
 function setupSearch() {
@@ -113,8 +142,43 @@ function setupSearch() {
     input.value = "";
     markers.forEach(({ marker }) => {
       marker.setStyle({
-        fillOpacity: 0.8,
+        fillOpacity: 0.9,
         opacity: 1
+      });
+    });
+  });
+}
+
+
+
+function getColor(sample, mode) {
+  if (mode === "MT_haplogroup") {
+    return haplogroupColor(sample.MT_haplogroup);
+  }
+
+  if (mode === "Sex") {
+    return sexColor(sample.Sex);
+  }
+
+  if (mode === "Kinship_group") {
+    return kinshipColor(sample.Kinship_group);
+  }
+
+  return "#555555";
+}
+
+function setupColorMode() {
+  const colorModeSelect = document.getElementById("colorMode");
+
+  colorModeSelect.addEventListener("change", () => {
+    const mode = colorModeSelect.value;
+
+    markers.forEach(({ sample, marker }) => {
+      const color = getColor(sample, mode);
+
+      marker.setStyle({
+        color: color,
+        fillColor: color
       });
     });
   });
