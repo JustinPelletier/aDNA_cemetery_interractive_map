@@ -83,12 +83,12 @@ function coffinCoordinates(x, y, width = 2.2, height = 3.6) {
   const h = height / 2;
 
   return [
-    [y - h, x - w * 0.45],
-    [y - h, x + w * 0.45],
-    [y - h * 0.45, x + w],
-    [y + h, x + w * 0.75],
-    [y + h, x - w * 0.75],
-    [y - h * 0.45, x - w]
+    [y + h, x - w * 0.45],
+    [y + h, x + w * 0.45],
+    [y + h * 0.45, x + w],
+    [y - h, x + w * 0.75],
+    [y - h, x - w * 0.75],
+    [y + h * 0.45, x - w]
   ];
 }
 
