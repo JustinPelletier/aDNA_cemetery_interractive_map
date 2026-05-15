@@ -17,22 +17,21 @@
     <button id="clearSearch">Clear</button>
   
     <label for="colorMode">Color by:</label>
-    <select id="colorMode">
-      <option value="MT_haplogroup">MT haplogroup</option>
-      <option value="Sex">Sex</option>
-      <option value="Kinship_group">Kinship group</option>
-    </select>
-  </div>
-  
-  <div id="map"></div>
-
-  <label for="colorMode">Color by:</label>
   <select id="colorMode">
     <option value="MT_haplogroup">MT haplogroup</option>
     <option value="Sex">Sex</option>
     <option value="Kinship_group">Kinship group</option>
   </select>
+  
+  <div id="map"></div>
 
+  
+
+  <div id="legendPanel">
+    <h3>Legend / Filters</h3>
+    <div id="legendContent"></div>
+  </div>
+  
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="app.js?v=2"></script>
 
