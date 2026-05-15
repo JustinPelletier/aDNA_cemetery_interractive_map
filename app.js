@@ -211,19 +211,17 @@ function buildLegend() {
 
   legendContent.innerHTML = "";
 
-  let uniqueValues = [];
+  let uniqueValues = markers
+    .map(({ sample }) => sample[colorMode] || "NA")
+    .filter(value => value !== "");
 
-  markers.forEach(({ sample }) => {
-    uniqueValues.push(sample[colorMode]);
-  });
-
-  uniqueValues = [...new Set(uniqueValues)];
+  uniqueValues = [...new Set(uniqueValues)].sort();
 
   activeFilters = new Set(uniqueValues);
 
   uniqueValues.forEach(value => {
-    const sample = markers.find(m => m.sample[colorMode] === value).sample;
-    const color = getColor(sample, colorMode);
+    const example = markers.find(m => (m.sample[colorMode] || "NA") === value);
+    const color = getColor(example.sample, colorMode);
 
     const row = document.createElement("div");
     row.className = "legend-item";
