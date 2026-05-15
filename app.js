@@ -67,15 +67,23 @@ function kinshipColor(group) {
 }
 
 function getColor(sample, mode) {
-  if (mode === "MT_haplogroup") return haplogroupColor(sample.MT_haplogroup);
-  if (mode === "Sex") return sexColor(sample.Sex);
-  if (mode === "Kinship_group") return kinshipColor(sample.Kinship_group);
+  if (mode === "MT_haplogroup") {
+    return haplogroupColor(sample.MT_haplogroup);
+  }
+
+  if (mode === "Sex") {
+    return sexColor(sample.Sex);
+  }
+
+  if (mode === "Kinship_group") {
+    return kinshipColor(sample.Kinship_group);
+  }
 
   return "#555555";
 }
 
 // ======================================================
-// Coffin polygon marker
+// Coffin polygons
 // ======================================================
 
 function coffinCoordinates(x, y, width = 2.2, height = 3.6) {
@@ -98,7 +106,7 @@ function createCoffinPolygon(sample, color, opacity = 0.85) {
 
   return L.polygon(coffinCoordinates(x, y), {
     color: "black",
-    weight: 0.80,
+    weight: 1.2,
     fillColor: color,
     fillOpacity: opacity,
     opacity: opacity
@@ -106,10 +114,15 @@ function createCoffinPolygon(sample, color, opacity = 0.85) {
 }
 
 // ======================================================
-// Load samples
+// Global objects
 // ======================================================
 
 const markers = [];
+let activeFilters = new Set();
+
+// ======================================================
+// Load samples
+// ======================================================
 
 fetch("data/samples_test.tsv")
   .then(response => response.text())
@@ -118,7 +131,12 @@ fetch("data/samples_test.tsv")
 
     samples.forEach(sample => {
       const color = getColor(sample, "MT_haplogroup");
-      const marker = createCoffinPolygon(sample, color, 0.85).addTo(map);
+
+      const marker = createCoffinPolygon(
+        sample,
+        color,
+        0.85
+      ).addTo(map);
 
       marker.bindPopup(`
         <strong>${sample.Sample_ID}</strong><br>
@@ -134,38 +152,19 @@ fetch("data/samples_test.tsv")
 
     setupSearch();
     setupColorMode();
+    buildLegend();
   });
 
 // ======================================================
-// Search 
+// Search
 // ======================================================
 
 function setupSearch() {
   const input = document.getElementById("searchInput");
   const clearButton = document.getElementById("clearSearch");
-  const colorModeSelect = document.getElementById("colorMode");
 
   input.addEventListener("input", () => {
-    const query = input.value.toLowerCase().trim();
-    const mode = colorModeSelect.value;
-
-    markers.forEach(({ sample, marker }) => {
-      const match =
-        sample.Sample_ID.toLowerCase().includes(query) ||
-        sample.Stipulated_name.toLowerCase().includes(query);
-
-      const color = getColor(sample, mode);
-
-      marker.setStyle({
-        fillColor: color,
-        fillOpacity: query === "" || match ? 0.85 : 0.12,
-        opacity: query === "" || match ? 1 : 0.25
-      });
-
-      if (match && query !== "") {
-        marker.bringToFront();
-      }
-    });
+    applyFiltersAndColors();
   });
 
   input.addEventListener("keydown", event => {
@@ -173,8 +172,7 @@ function setupSearch() {
       const query = input.value.toLowerCase().trim();
 
       const found = markers.find(({ sample }) =>
-        sample.Sample_ID.toLowerCase().includes(query) ||
-        sample.Stipulated_name.toLowerCase().includes(query)
+        sample.Sample_ID.toLowerCase().includes(query)
       );
 
       if (found) {
@@ -186,17 +184,7 @@ function setupSearch() {
 
   clearButton.addEventListener("click", () => {
     input.value = "";
-    const mode = colorModeSelect.value;
-
-    markers.forEach(({ sample, marker }) => {
-      const color = getColor(sample, mode);
-
-      marker.setStyle({
-        fillColor: color,
-        fillOpacity: 0.85,
-        opacity: 1
-      });
-    });
+    applyFiltersAndColors();
   });
 }
 
@@ -208,14 +196,94 @@ function setupColorMode() {
   const colorModeSelect = document.getElementById("colorMode");
 
   colorModeSelect.addEventListener("change", () => {
-    const mode = colorModeSelect.value;
+    buildLegend();
+    applyFiltersAndColors();
+  });
+}
 
-    markers.forEach(({ sample, marker }) => {
-      const color = getColor(sample, mode);
+// ======================================================
+// Legend
+// ======================================================
 
-      marker.setStyle({
-        fillColor: color
-      });
+function buildLegend() {
+  const legendContent = document.getElementById("legendContent");
+  const colorMode = document.getElementById("colorMode").value;
+
+  legendContent.innerHTML = "";
+
+  let uniqueValues = [];
+
+  markers.forEach(({ sample }) => {
+    uniqueValues.push(sample[colorMode]);
+  });
+
+  uniqueValues = [...new Set(uniqueValues)];
+
+  activeFilters = new Set(uniqueValues);
+
+  uniqueValues.forEach(value => {
+    const sample = markers.find(m => m.sample[colorMode] === value).sample;
+    const color = getColor(sample, colorMode);
+
+    const row = document.createElement("div");
+    row.className = "legend-item";
+
+    row.innerHTML = `
+      <input type="checkbox" checked data-value="${value}">
+      <span class="legend-color" style="background:${color}"></span>
+      <span>${value}</span>
+    `;
+
+    legendContent.appendChild(row);
+  });
+
+  document.querySelectorAll("#legendContent input").forEach(cb => {
+    cb.addEventListener("change", () => {
+      activeFilters.clear();
+
+      document.querySelectorAll("#legendContent input:checked")
+        .forEach(c => activeFilters.add(c.dataset.value));
+
+      applyFiltersAndColors();
     });
+  });
+}
+
+// ======================================================
+// Apply filters/colors
+// ======================================================
+
+function applyFiltersAndColors() {
+  const colorMode = document.getElementById("colorMode").value;
+  const query = document
+    .getElementById("searchInput")
+    .value
+    .toLowerCase()
+    .trim();
+
+  markers.forEach(({ sample, marker }) => {
+
+    const category = sample[colorMode];
+
+    const color = getColor(sample, colorMode);
+
+    const searchMatch =
+      sample.Sample_ID.toLowerCase().includes(query);
+
+    const filterMatch = activeFilters.has(category);
+
+    const visible =
+      (query === "" || searchMatch) &&
+      filterMatch;
+
+    marker.setStyle({
+      fillColor: color,
+      fillOpacity: visible ? 0.85 : 0.08,
+      opacity: visible ? 1 : 0.15
+    });
+
+    if (visible) {
+      marker.bringToFront();
+    }
   });
 }
